@@ -115,7 +115,7 @@ def main() -> None:
     )
 
     fig.tight_layout()
-    fig.save("outputs/figures/ellipse_wavelets.png", dpi=300)
+    fig.save("outputs/figures/elliptic_wavelets.png", dpi=300)
     fig.show()
 
 
