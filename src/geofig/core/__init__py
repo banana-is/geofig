@@ -1,0 +1,4 @@
+from .curve import Ellipse
+from .indicatrix import EllipseIndicatrix
+
+__all__ = ["Ellipse", "EllipseIndicatrix"]
