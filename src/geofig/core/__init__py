@@ -1,7 +1,10 @@
 from .curve import Ellipse
 from .indicatrix import EllipseIndicatrix
 from .surface import MongePatch
+from .geodesic import Geodesic2D, GeodesicSpray2D
 
 __all__ = ["Ellipse", 
            "EllipseIndicatrix", 
-           "MongePatch" ]
+           "MongePatch",
+            "Geodesic2D",
+            "GeodesicSpray2D"]

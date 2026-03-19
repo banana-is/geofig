@@ -3,6 +3,9 @@ import numpy as np
 from geofig import Ellipse, EllipseIndicatrix, Figure2D, LineStyle
 
 
+# ---------------------------------
+# palette
+# ---------------------------------
 gold     = "#F8B55F"
 rose     = "#C95792"
 violet   = "#7C4585"
@@ -16,20 +19,16 @@ def sample_ellipse(a: float, b: float, center: tuple[float, float], n: int = 800
 
 def main() -> None:
     # ---------------------------------
-    # shape of centered ellipse E
+    # parameters
     # ---------------------------------
     a = 2.0
     b = 1.0
 
-    # times
-    t = 1.0
-    r = 0.45
+    t = 1.0          # current time
+    r = 0.45         # extra time step
 
-    # shift in the wavelet K = c + E
-    c = np.array([0.9, 0.35])
-
-    # optional fixed translation p0
-    p0 = np.array([-1.2, -0.4])
+    # fixed translation of the entire front
+    p0 = np.array([1.1, 0.6])
 
     n_curve = 1200
     n_wavelet = 300
@@ -37,9 +36,9 @@ def main() -> None:
 
     # ---------------------------------
     # front at time t:
-    # T_t = p0 + t(c + E) = p0 + tc + tE
+    # T_t = p0 + tE
     # ---------------------------------
-    center_t = p0 + t * c
+    center_t = p0
     front_t = sample_ellipse(
         a=t * a,
         b=t * b,
@@ -49,9 +48,9 @@ def main() -> None:
 
     # ---------------------------------
     # front at time t+r:
-    # T_{t+r} = p0 + (t+r)(c + E)
+    # T_{t+r} = p0 + (t+r)E
     # ---------------------------------
-    center_tr = p0 + (t + r) * c
+    center_tr = p0
     front_tr = sample_ellipse(
         a=(t + r) * a,
         b=(t + r) * b,
@@ -60,25 +59,26 @@ def main() -> None:
     )
 
     # ---------------------------------
-    # shifted wavelet:
-    # rK = r(c + E) = rc + rE
-    # wavelet at point x in T_t is x + rK = x + rc + rE
+    # centered elliptic wavelet:
+    # rE
+    # so each wavelet at x on T_t is x + rE
     # ---------------------------------
-    rc = r * c
     wavelet = EllipseIndicatrix(a=a, b=b)
 
     fig = Figure2D(figsize=(9, 7))
 
+    # current front
     fig.add_polyline(
         front_t,
         closed=True,
         style=LineStyle(
             color=indigo,
             linewidth=3,
-            label=r"Current front $T_t = p_0 + tc + tE$",
+            label=r"Current front $T_t = p_0 + tE$",
         ),
     )
 
+    # evolved front
     fig.add_polyline(
         front_tr,
         closed=True,
@@ -86,64 +86,34 @@ def main() -> None:
             color=gold,
             linewidth=3,
             linestyle="--",
-            label=r"Next front $T_{t+r} = p_0 + (t+r)c + (t+r)E$",
+            label=r"Next front $T_{t+r} = p_0 + (t+r)E$",
         ),
     )
 
+    # wavelets placed along current front
     idx = np.linspace(0, n_curve - 1, num_wavelets, dtype=int)
     for k in idx:
         x = front_t[k]
-        W = wavelet.sample(n_wavelet, scale=r) + x + rc
+        W = wavelet.sample(n_wavelet, scale=r) + x
         fig.add_polyline(
             W,
             closed=True,
             style=LineStyle(color=deepblue, linewidth=1, alpha=0.22),
         )
 
-    centers = np.array([center_t, center_tr])
-    fig.ax.scatter(
-        centers[:, 0],
-        centers[:, 1],
-        s=35,
-        color=rose,
-        zorder=5,
-    )
-
+    # mark the fixed center
     fig.ax.scatter(
         [p0[0]],
         [p0[1]],
-        s=30,
-        color=violet,
+        s=35,
+        color=rose,
         zorder=5,
-    )
-
-    fig.ax.annotate(
-        "",
-        xy=center_tr,
-        xytext=center_t,
-        arrowprops=dict(arrowstyle="->", color=rose, lw=2),
     )
 
     fig.ax.text(
         p0[0] + 0.05,
         p0[1] - 0.15,
         r"$p_0$",
-        color=violet,
-        fontsize=11,
-    )
-
-    fig.ax.text(
-        center_t[0] + 0.05,
-        center_t[1] - 0.15,
-        r"$p_0+tc$",
-        color=rose,
-        fontsize=11,
-    )
-
-    fig.ax.text(
-        center_tr[0] + 0.05,
-        center_tr[1] - 0.15,
-        r"$p_0+(t+r)c$",
         color=rose,
         fontsize=11,
     )
@@ -151,10 +121,13 @@ def main() -> None:
     fig.set_equal()
     fig.hide_axes()
 
-    pad_x = abs(p0[0]) + abs((t + r) * c[0]) + (t + r) * a * 1.8
-    pad_y = abs(p0[1]) + abs((t + r) * c[1]) + (t + r) * b * 2.0
+    pad_x = abs(p0[0]) + (t + r) * a * 1.6
+    pad_y = abs(p0[1]) + (t + r) * b * 1.8
 
-    fig.set_limits(-pad_x, pad_x, -pad_y, pad_y)
+    fig.set_limits(
+        -pad_x, pad_x,
+        -pad_y, pad_y,
+    )
 
     fig.add_legend(
         loc="upper center",
@@ -164,7 +137,7 @@ def main() -> None:
     )
 
     fig.tight_layout()
-    fig.save("outputs/figures/translated_and_shifted_wavelets.png", dpi=300)
+    fig.save("outputs/figures/translated_wavelets.png", dpi=300)
     fig.show()
 
 
